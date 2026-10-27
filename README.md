@@ -241,6 +241,8 @@ assets/DejaVuSans.ttf   шрифт с шахматными символами
 tests/                  оффлайн и интеграционные тесты
 Dockerfile              образ для VPS/хостинга
 render.yaml             готовый blueprint для Render (бесплатный план)
+run_forever.ps1         автоперезапуск бота на Windows
+deploy/windows-task.ps1 задача Планировщика Windows «ChessBot»
 deploy/README.md        инструкции по размещению
 deploy/free-hosting.md  сравнение бесплатных хостингов для России
 deploy/termux.md        запуск на старом Android-телефоне
@@ -271,8 +273,26 @@ python tests/test_handlers.py  # полные сценарии партии бе
 
 ### Windows
 
-Задача в «Планировщике заданий» с запуском `python main.py` в папке проекта
-(или `run.bat`).
+Бот уже поставлен в Планировщик заданий как задача **ChessBot**: запускается при
+входе в систему, а `run_forever.ps1` поднимает его заново через 10 секунд после
+падения. Окно консоли не открывается (`pythonw.exe`), логи пишутся в
+`data/bot.log` (ротация: 2 МБ × 3 файла).
+
+```powershell
+Get-ScheduledTask ChessBot | Select-Object TaskName, State
+Start-ScheduledTask ChessBot     # запустить
+Stop-ScheduledTask ChessBot      # остановить
+Get-Content data\bot.log -Tail 20 -Encoding UTF8
+```
+
+Пересоздать задачу (например, после переноса папки или на другом ПК):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File deploy\windows-task.ps1
+```
+
+Если ПК выключается или пользователь не вошёл в систему — бот не работает;
+для круглосуточной работы нужен хостинг или телефон (см. ниже).
 
 ### Linux/VPS
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import logging.handlers
 import os
 import sys
 import threading
@@ -152,16 +153,40 @@ async def _run(
         await client.disconnect()
 
 
+LOG_FORMAT = "%(asctime)s %(levelname)-8s %(name)s: %(message)s"
+
+
+def _setup_logging() -> None:
+    """Логи в файл и в stderr (в фоне без консоли stderr отсутствует)."""
+    handlers: list[logging.Handler] = []
+    if sys.stderr is not None:
+        handlers.append(logging.StreamHandler())
+
+    log_path = (os.getenv("LOG_PATH") or os.path.join("data", "bot.log")).strip()
+    if log_path:
+        os.makedirs(os.path.dirname(os.path.abspath(log_path)) or ".", exist_ok=True)
+        handlers.append(
+            logging.handlers.RotatingFileHandler(
+                log_path,
+                maxBytes=2 * 1024 * 1024,
+                backupCount=3,
+                encoding="utf-8",
+            )
+        )
+
+    logging.basicConfig(
+        format=LOG_FORMAT,
+        level=logging.INFO,
+        handlers=handlers or [logging.NullHandler()],
+    )
+    logging.getLogger("telethon").setLevel(logging.WARNING)
+
+
 def main() -> None:
     from dotenv import load_dotenv
 
     load_dotenv()
-
-    logging.basicConfig(
-        format="%(asctime)s %(levelname)-8s %(name)s: %(message)s",
-        level=logging.INFO,
-    )
-    logging.getLogger("telethon").setLevel(logging.WARNING)
+    _setup_logging()
 
     token = (os.getenv("BOT_TOKEN") or "").strip()
     if not token and len(sys.argv) > 1:
