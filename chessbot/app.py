@@ -53,16 +53,21 @@ def _proxy_from_url(url: str) -> dict:
 
 
 def _health_port() -> int | None:
-    """Порт для HTTP-проверки (Render, Koyeb и другие PaaS требуют слушать $PORT)."""
-    raw = (os.getenv("HEALTH_PORT") or os.getenv("PORT") or "").strip()
+    """Порт для HTTP-проверки живости (PaaS обычно передают $PORT или $SERVER_PORT)."""
+    raw = (
+        os.getenv("HEALTH_PORT")
+        or os.getenv("PORT")
+        or os.getenv("SERVER_PORT")
+        or ""
+    ).strip()
     if not raw:
         return None
     try:
         port = int(raw)
     except ValueError as exc:
-        raise SystemExit("HEALTH_PORT/PORT должен быть числом") from exc
+        raise SystemExit("HEALTH_PORT/PORT/SERVER_PORT должен быть числом") from exc
     if not 0 < port < 65536:
-        raise SystemExit("HEALTH_PORT/PORT должен быть в диапазоне 1..65535")
+        raise SystemExit("HEALTH_PORT/PORT/SERVER_PORT должен быть в диапазоне 1..65535")
     return port
 
 
