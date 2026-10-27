@@ -1,0 +1,17 @@
+# Blueprint для Render: dashboard.render.com → New → Blueprint → выбрать репозиторий.
+# Бесплатный план: 512 МБ RAM, 0.1 CPU, 750 часов в месяц, диск эфемерный.
+services:
+  - type: web
+    name: chess-bot
+    runtime: docker
+    plan: free
+    region: frankfurt
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      # Токен вводится в панели Render, в git его быть не должно
+      - key: BOT_TOKEN
+        sync: false
+      - key: FINISHED_GAME_TTL
+        value: "600"
+      # PORT Render подставляет сам, бот поднимет на нём health-сервер

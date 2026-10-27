@@ -1,0 +1,12 @@
+.env
+data/
+logs/
+dist/
+tests/out/
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.session
+*.session-journal

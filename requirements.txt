@@ -1,0 +1,5 @@
+python-chess==1.999
+Pillow==11.3.0
+python-dotenv==1.1.1
+telethon==1.42.0
+python-socks[asyncio]==2.7.2
