@@ -156,7 +156,8 @@ class FakeCallbackEvent:
         self.sender_id = sender.id
         self.data = data.encode() if isinstance(data, str) else data
         self.message_id = message_id
-        self.message = SimpleNamespace(id=message_id)
+        # У настоящего CallbackQuery (Telethon 1.42) атрибута message нет вовсе:
+        # есть только message_id и get_message(). Код обязан это переживать.
         self.is_private = is_private
         self.is_group = not is_private
         self.sender = sender

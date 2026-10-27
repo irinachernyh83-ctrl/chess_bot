@@ -183,7 +183,6 @@ def test_keyboards() -> None:
         "приглашение": keyboards.invite_offer_buttons("tok"),
         "подтверждение сдачи": keyboards.resign_buttons(1, 1),
         "ничья": keyboards.draw_buttons(1, 1),
-        "пустая": keyboards.empty_markup(),
         "инлайн-фигуры": keyboards.inline_board_buttons("tok", chess.Board()),
         "инлайн-клетки": keyboards.inline_board_buttons("tok", chess.Board(), "e2"),
         "инлайн-сдача": keyboards.inline_resign_confirm("tok"),
@@ -199,6 +198,8 @@ def test_keyboards() -> None:
     ok(all(type(row).__name__ == "KeyboardButtonRow" for row in menu.rows),
        "строки меню — KeyboardButtonRow")
     ok(menu.persistent and menu.resize, "меню закреплено и компактное")
+    ok(keyboards.empty_markup() is None,
+       "пустая разметка — None: пустой ReplyInlineMarkup Telegram отвергает")
 
     start = chess.Board()
     sources = keyboards.inline_board_buttons("tok", start)

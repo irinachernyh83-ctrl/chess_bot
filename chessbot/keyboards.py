@@ -5,7 +5,6 @@ from __future__ import annotations
 import chess
 from telethon import Button
 from telethon.tl import types
-from telethon.tl.types import ReplyInlineMarkup
 
 from . import texts
 
@@ -195,6 +194,12 @@ def inline_draw_confirm(token: str) -> list[list[Button]]:
     ]
 
 
-def empty_markup() -> ReplyInlineMarkup:
-    """Пустая инлайн-клавиатура — убирает кнопки у сообщения."""
-    return ReplyInlineMarkup(rows=[])
+def empty_markup() -> None:
+    """Снять инлайн-клавиатуру у сообщения.
+
+    Пустой ``ReplyInlineMarkup(rows=[])`` Telegram отвергает с
+    ``REPLY_MARKUP_INVALID`` (проверено на живом API). А вот отсутствие
+    разметки в запросе как раз очищает клавиатуру при редактировании и
+    не рисует её при отправке — поэтому здесь ``None``.
+    """
+    return None

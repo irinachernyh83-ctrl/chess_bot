@@ -168,8 +168,18 @@ class ChessBot:
         return f"game:{game_id}"
 
     # --------------------------------------------------------------- отправка
+    @staticmethod
+    def _reply_to(event) -> int | None:
+        """Id сообщения, на которое отвечаем.
+
+        У ``CallbackQuery`` (Telethon 1.42) атрибута ``message`` нет вовсе:
+        есть только ``message_id`` и ``get_message()``. Поэтому через ``getattr``.
+        """
+        message = getattr(event, "message", None)
+        return getattr(message, "id", None)
+
     async def _reply(self, event, text: str) -> None:
-        await self._notify(event.chat_id, text, reply_to=event.message.id)
+        await self._notify(event.chat_id, text, reply_to=self._reply_to(event))
 
     async def _notify(
         self,
@@ -386,7 +396,7 @@ class ChessBot:
             event.chat_id,
             texts.start_text(self.username or "бот"),
             buttons=buttons,
-            reply_to=event.message.id,
+            reply_to=self._reply_to(event),
         )
 
     async def cmd_help(self, event) -> None:
@@ -395,7 +405,7 @@ class ChessBot:
             event.chat_id,
             texts.help_text(self.username or "бот"),
             buttons=buttons,
-            reply_to=event.message.id,
+            reply_to=self._reply_to(event),
         )
 
     async def cb_help(self, event, rest: list[str]) -> None:
@@ -409,7 +419,7 @@ class ChessBot:
                 event.chat_id,
                 texts.menu_text(self.username or "бот"),
                 buttons=keyboards.main_menu(),
-                reply_to=event.message.id,
+                reply_to=self._reply_to(event),
             )
         else:
             await self._reply(event, texts.menu_group_text())
@@ -630,7 +640,9 @@ class ChessBot:
     async def _prepared_photo(self, png: bytes):
         """Загружает фото на сервер заранее: иначе инлайн-редактирование
         падает с FilePart0Missing."""
-        handle = await self.client.upload_file(io.BytesIO(png))
+        # Имя с расширением обязательно: без него Telegram отвечает
+        # «The extension of the photo is invalid» на UploadMediaRequest.
+        handle = await self.client.upload_file(io.BytesIO(png), file_name="board.png")
         media = await self.client(
             functions.messages.UploadMediaRequest(
                 types.InputPeerSelf(),
@@ -962,7 +974,7 @@ class ChessBot:
             chat_id,
             event.sender_id,
             display_name(sender),
-            reply_to=event.message.id,
+            reply_to=self._reply_to(event),
         )
 
     async def _ask_time(
@@ -1055,7 +1067,7 @@ class ChessBot:
             event.chat_id,
             texts.invite_offer_text(inviter, game),
             buttons=keyboards.invite_offer_buttons(token),
-            reply_to=event.message.id,
+            reply_to=self._reply_to(event),
         )
 
     async def cb_jac(self, event, rest: list[str]) -> None:
@@ -1091,7 +1103,7 @@ class ChessBot:
             await self._publish(
                 game,
                 game.board(),
-                reply_to=event.message.id,
+                reply_to=self._reply_to(event),
                 reply_chat=event.chat_id,
             )
             await self._notify(
@@ -1192,7 +1204,7 @@ class ChessBot:
             game,
             game.board(),
             new_message=True,
-            reply_to=event.message.id,
+            reply_to=self._reply_to(event),
             reply_chat=event.chat_id,
         )
 
@@ -1593,7 +1605,7 @@ class ChessBot:
             event.chat_id,
             texts.resign_confirm_text(texts.user_link(event.sender_id, display_name(sender))),
             buttons=keyboards.resign_buttons(game.id, event.sender_id),
-            reply_to=event.message_id if via_button else event.message.id,
+            reply_to=event.message_id if via_button else self._reply_to(event),
         )
         if via_button:
             await self._answer(event)
@@ -1696,7 +1708,7 @@ class ChessBot:
             target_chat,
             texts.draw_offer_text(link),
             buttons=keyboards.draw_buttons(game.id, event.sender_id),
-            reply_to=event.message.id if target_chat == event.chat_id else None,
+            reply_to=self._reply_to(event) if target_chat == event.chat_id else None,
         )
         if target_chat != event.chat_id:
             await self._notify(event.chat_id, "🤝 Предложение ничьей отправлено сопернику.")
